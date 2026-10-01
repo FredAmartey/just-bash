@@ -12,14 +12,15 @@ pnpm build     # required before anything reads dist/
 pnpm test:run  # unit, comparison, and spec tests
 ```
 
-These commands run from the repository root, where each script delegates to the packages. Test paths are relative to the package that owns them, so testing a single file needs a package filter:
+These commands run from the repository root, where each script delegates to the packages. A single package's script runs with `pnpm --filter <name> <script>`, and test paths are relative to the package that owns them, so a single test file needs the filter too:
 
 ```sh
 pnpm test:unit          # fast unit tests
 pnpm test:comparison    # recorded bash fixtures
 pnpm test:wasm          # python3, sqlite3, js-exec
+pnpm test:dist          # smoke-test the built package (after pnpm build)
 pnpm typecheck
-pnpm lint
+pnpm lint               # biome, per-package banned-pattern checks, and workflow security checks
 pnpm knip
 
 pnpm --filter just-bash test:run src/commands/grep/grep.basic.test.ts  # a single test file
@@ -130,7 +131,7 @@ Each issue form applies one type label automatically.
 | `documentation` | Documentation needs a correction or an addition |
 | `chore` | Repository maintenance: dependencies, tooling, CI, or internal work |
 
-GitHub's other standard labels (`invalid`, `question`, `good first issue`, `help wanted`) are also in use for triage.
+GitHub's `good first issue` and `help wanted` labels are also in use for triage.
 
 Topic labels group related issues, so it is easy to see which issues belong to the same area of the project. They are additive: an issue can have several, and a change that spans areas can have several. Maintainers add them during triage, so you do not need to add them yourself.
 
@@ -141,6 +142,7 @@ Topic labels group related issues, so it is easy to see which issues belong to t
 | `filesystem` | Filesystem implementations, mounts, links, and file operations |
 | `security` | Sandbox boundaries, trust, and vulnerability reports |
 | `compatibility` | Running or bundling just-bash in browsers, Node.js, Bun, and other hosts |
+| `api` | Programmatic interfaces for embedding just-bash: configuration, callbacks, and execution results |
 | `network` | HTTP behavior, network permissions, and request configuration |
 | `dependencies` | Dependency updates and dependency-related problems |
 | `ci` | Automated checks and GitHub Actions |
