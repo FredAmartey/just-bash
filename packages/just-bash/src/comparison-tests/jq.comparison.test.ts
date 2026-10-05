@@ -70,6 +70,20 @@ describe("jq command - Real Bash Comparison", () => {
       });
       await compareOutputs(env, testDir, "jq '.[-1]' data.json");
     });
+
+    it("should evaluate the index of X[expr] against the input", async () => {
+      const env = await setupFiles(testDir, {
+        "data.json": '{"foo":{"x":1},"bar":"x"}',
+      });
+      await compareOutputs(env, testDir, "jq '.foo[.bar]' data.json");
+    });
+
+    it("should vary the base fastest with several bases and indices", async () => {
+      const env = await setupFiles(testDir, {
+        "data.json": '{"x":[1,2],"y":[3,4]}',
+      });
+      await compareOutputs(env, testDir, "jq -c '[(.x,.y)[0,1]]' data.json");
+    });
   });
 
   describe("array iteration", () => {

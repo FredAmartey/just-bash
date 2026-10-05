@@ -586,10 +586,11 @@ function evaluateNode(
     }
 
     case "Index": {
-      const bases = ast.base ? evaluate(value, ast.base, ctx) : [value];
-      return boundedFlatMap(ctx, bases, (v) => {
-        const indices = evaluate(v, ast.index, ctx);
-        return boundedFlatMap(ctx, indices, (idx) => {
+      // jq evaluates the index against the input first, then the base per index
+      const indices = evaluate(value, ast.index, ctx);
+      return boundedFlatMap(ctx, indices, (idx) => {
+        const bases = ast.base ? evaluate(value, ast.base, ctx) : [value];
+        return boundedFlatMap(ctx, bases, (v) => {
           if (typeof idx === "number" && Array.isArray(v)) {
             // Handle NaN - return null for NaN index
             if (Number.isNaN(idx)) {
