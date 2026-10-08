@@ -2167,10 +2167,25 @@ function collectPaths(
           typeof key === "string" || typeof key === "number",
       )
     ) {
-      if (keys.length > 0 && expr.base) evaluate(value, expr.base, ctx);
+      if (keys.length === 0) return;
+      const bases = expr.base ? evaluate(value, expr.base, ctx) : [value];
       for (const key of keys) {
-        chargeQueryWork(ctx);
-        appendPath([...currentPath, ...basePath, key]);
+        for (const base of bases) {
+          chargeQueryWork(ctx);
+          // Missing paths are valid, but existing containers must support the key.
+          if (
+            base !== null &&
+            (typeof key === "string"
+              ? typeof base !== "object" || Array.isArray(base)
+              : !Array.isArray(base))
+          ) {
+            const type = Array.isArray(base) ? "array" : typeof base;
+            throw new Error(
+              `Cannot index ${type} with ${typeof key === "string" ? `string "${key}"` : "number"}`,
+            );
+          }
+          appendPath([...currentPath, ...basePath, key]);
+        }
       }
       return;
     }

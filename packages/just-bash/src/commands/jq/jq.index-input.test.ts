@@ -9,6 +9,30 @@ describe("jq X[expr] evaluates expr against the input", () => {
   }
 
   it.each([
+    [
+      "try path(.a[.b]) catch .",
+      '{"a":5,"b":"x"}',
+      '"Cannot index number with string \\"x\\""',
+    ],
+    [
+      "try pick(.a[.b]) catch .",
+      '{"a":5,"b":"x"}',
+      '"Cannot index number with string \\"x\\""',
+    ],
+    [
+      "try path(.a[.b]) catch .",
+      '{"a":[],"b":"x"}',
+      '"Cannot index array with string \\"x\\""',
+    ],
+    [
+      "try path(.a[.b]) catch .",
+      '{"a":{},"b":0}',
+      '"Cannot index object with number"',
+    ],
+    ["path(.a[.b])", '{"b":"x"}', '["a","x"]'],
+    ["pick(.a[.b])", '{"a":null,"b":"x"}', '{"a":{"x":null}}'],
+    ['try path(.a.options[error("index")]) catch .', '{"a":[]}', '"index"'],
+    ["[path(.a.options[empty])]", '{"a":[]}', "[]"],
     ['{"a":1,"b":2} as $m | $m[.]', '"b"', "2"],
     ["[10,20,30] as $a | $a[.]", "1", "20"],
     [".foo[.bar]", '{"foo":{"x":1},"bar":"x"}', "1"],
