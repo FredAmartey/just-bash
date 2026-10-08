@@ -2168,7 +2168,10 @@ function collectPaths(
       )
     ) {
       if (keys.length > 0 && expr.base) evaluate(value, expr.base, ctx);
-      for (const key of keys) appendPath([...currentPath, ...basePath, key]);
+      for (const key of keys) {
+        chargeQueryWork(ctx);
+        appendPath([...currentPath, ...basePath, key]);
+      }
       return;
     }
   }
