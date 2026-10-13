@@ -2130,14 +2130,23 @@ function collectPaths(
       "recursion",
     );
   }
-  const appendPath = (path: (string | number)[]): void => {
-    if (path.length > ctx.limits.maxDepth) {
+  const appendPath = (
+    suffix: (string | number)[],
+    key?: string | number,
+  ): void => {
+    const length =
+      currentPath.length + suffix.length + (key === undefined ? 0 : 1);
+    if (length > ctx.limits.maxDepth) {
       throw queryLimitError(
         `query depth limit exceeded (${ctx.limits.maxDepth})`,
         "recursion",
       );
     }
     assertQueryResultCapacity(ctx, paths.length);
+    // Charge every copied entry before allocating the result path.
+    chargeQueryWork(ctx, length);
+    const path = [...currentPath, ...suffix];
+    if (key !== undefined) path.push(key);
     paths.push(path);
   };
   // Handle Comma - collect paths for both parts
@@ -2151,7 +2160,7 @@ function collectPaths(
   // Try to extract a static path from the AST
   const staticPath = extractPathFromAst(expr);
   if (staticPath !== null) {
-    appendPath([...currentPath, ...staticPath]);
+    appendPath(staticPath);
     return;
   }
 
@@ -2184,7 +2193,7 @@ function collectPaths(
               `Cannot index ${type} with ${typeof key === "string" ? `string "${key}"` : "number"}`,
             );
           }
-          appendPath([...currentPath, ...basePath, key]);
+          appendPath(basePath, key);
         }
       }
       return;
@@ -2197,12 +2206,12 @@ function collectPaths(
     if (Array.isArray(value)) {
       for (let i = 0; i < value.length; i++) {
         chargeQueryWork(ctx);
-        appendPath([...currentPath, i]);
+        appendPath([], i);
       }
     } else if (value && typeof value === "object") {
       for (const key of Object.keys(value)) {
         chargeQueryWork(ctx);
-        appendPath([...currentPath, key]);
+        appendPath([], key);
       }
     }
     return;
@@ -2217,7 +2226,7 @@ function collectPaths(
       const entry = stack.pop();
       if (!entry) break;
       chargeQueryWork(ctx);
-      appendPath([...currentPath, ...entry.path]);
+      appendPath(entry.path);
       if (entry.value && typeof entry.value === "object") {
         const entries = Array.isArray(entry.value)
           ? entry.value.map((child, index) => [index, child] as const)
@@ -2254,6 +2263,6 @@ function collectPaths(
   // Fallback: if expression produces results, push current path
   const results = evaluate(value, expr, ctx);
   if (results.length > 0) {
-    appendPath(currentPath);
+    appendPath([]);
   }
 }
